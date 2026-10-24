@@ -1,0 +1,3 @@
+{"timestamp":"2026-05-26T03:52:40.586Z","type":"native_hook_stdin_parse_error","hook_event_name":"Unknown","error":"Expected double-quoted property name in JSON at position 3567 (line 1 column 3568)"}
+{"timestamp":"2026-05-26T03:54:02.769Z","type":"native_hook_stdin_parse_error","hook_event_name":"Unknown","error":"Unexpected non-whitespace character after JSON at position 4564 (line 1 column 4565)"}
+{"timestamp":"2026-05-26T05:16:02.196Z","type":"native_hook_stdin_parse_error","hook_event_name":"Unknown","error":"Unexpected non-whitespace character after JSON at position 11942 (line 1 column 11943)"}

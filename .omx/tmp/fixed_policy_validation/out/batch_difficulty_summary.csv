@@ -1,0 +1,4 @@
+image,difficulty,K,regions,small_regions,edge_density,original_size,working_size,policy,k_upper_bound,output
+sample.png,easy,11,0,0,0.0602,24x24,24x24,fixed,60,sample_easy_k11.png
+sample.png,normal,21,0,0,0.0602,24x24,24x24,fixed,60,sample_normal_k21.png
+sample.png,hard,31,0,0,0.0602,24x24,24x24,fixed,60,sample_hard_k31.png

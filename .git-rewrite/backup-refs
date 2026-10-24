@@ -1,0 +1,13 @@
+87040f58c95846c4fba8f02ac4eb6ca449285e44 commit	refs/heads/main
+d77898472b8d57360036579ee35feb02eecdc9ed commit	refs/heads/start
+dbda4fe7780545428a3929da2d5f39a3c2527cb0 commit	refs/remotes/origin/HEAD
+e1a066e214539c5b9d1e9954f87645a2f73cdf88 commit	refs/remotes/origin/kgs/back
+217ee8f3b8144b009dcd351d2517745e3568e1ae commit	refs/remotes/origin/kgs/color-k-recommendation
+2e94d5ccd3d7572e50152309cb912fd633cb5aad commit	refs/remotes/origin/kgs/color-quantization-metrics
+f1567712ac0685fe14e5af258b2c3a4a592ad119 commit	refs/remotes/origin/kgs/frontend-backend-integration
+1938c1ffe2810428e4fed73f226567cc07697b5e commit	refs/remotes/origin/kgs/min-color-count
+dbda4fe7780545428a3929da2d5f39a3c2527cb0 commit	refs/remotes/origin/main
+bb1cdca664b40b376d5c1ba46ea69cec70d22679 commit	refs/remotes/origin/ocj/front
+3392511444f66cd77d3514f4671de4600ac57ae1 commit	refs/remotes/origin/ocj/front-description
+d77898472b8d57360036579ee35feb02eecdc9ed commit	refs/remotes/origin/start
+f569d124b62a9c77976873aaaae35afbe8c7100b commit	refs/remotes/origin/ych/edge-detection

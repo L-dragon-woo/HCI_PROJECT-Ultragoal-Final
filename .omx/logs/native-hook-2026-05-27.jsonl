@@ -1,0 +1,8 @@
+{"timestamp":"2026-05-27T05:20:29.469Z","type":"native_hook_stdin_parse_error","hook_event_name":"Unknown","error":"Unexpected non-whitespace character after JSON at position 1467 (line 1 column 1468)"}
+{"timestamp":"2026-05-27T05:27:23.064Z","type":"native_hook_stdin_parse_error","hook_event_name":"Unknown","error":"Unexpected non-whitespace character after JSON at position 12833 (line 1 column 12834)"}
+{"timestamp":"2026-05-27T05:28:32.546Z","type":"native_hook_stdin_parse_error","hook_event_name":"Unknown","error":"Expected ',' or '}' after property value in JSON at position 6568 (line 1 column 6569)"}
+{"timestamp":"2026-05-27T05:28:33.304Z","type":"native_hook_stdin_parse_error","hook_event_name":"Unknown","error":"Expected ',' or '}' after property value in JSON at position 6569 (line 1 column 6570)"}
+{"timestamp":"2026-05-27T05:32:33.847Z","type":"native_hook_stdin_parse_error","hook_event_name":"Unknown","error":"Unexpected non-whitespace character after JSON at position 1037 (line 1 column 1038)"}
+{"timestamp":"2026-05-27T05:33:15.506Z","type":"native_hook_stdin_parse_error","hook_event_name":"Unknown","error":"Expected double-quoted property name in JSON at position 870 (line 1 column 871)"}
+{"timestamp":"2026-05-27T05:33:16.296Z","type":"native_hook_stdin_parse_error","hook_event_name":"Unknown","error":"Expected double-quoted property name in JSON at position 871 (line 1 column 872)"}
+{"timestamp":"2026-05-27T14:32:04.948Z","type":"native_hook_stdin_parse_error","hook_event_name":"Unknown","error":"Unexpected non-whitespace character after JSON at position 14537 (line 1 column 14538)"}

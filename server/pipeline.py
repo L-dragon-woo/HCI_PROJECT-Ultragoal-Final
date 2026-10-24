@@ -1,0 +1,443 @@
+import logging
+import os
+import time
+import sys
+import tempfile
+from pathlib import Path
+from uuid import uuid4
+
+import cv2
+import numpy as np
+
+SERVER_DIR = Path(__file__).resolve().parent
+SRC_DIR = SERVER_DIR / "src"
+os.environ.setdefault("MPLCONFIGDIR", str(Path(tempfile.gettempdir()) / "hci_project_matplotlib"))
+os.environ.setdefault("XDG_CACHE_HOME", str(Path(tempfile.gettempdir()) / "hci_project_cache"))
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
+
+logger = logging.getLogger("coloring_pipeline")
+
+from coloringbook_utils import (
+    assign_region_color_numbers,
+    canny_edges,
+    clean_edges,
+    color_boundary_edges,
+    color_region_edge_preview,
+    color_region_preview,
+    coloring_line_image,
+    combine_with_color_index,
+    contour_regions,
+    count_unique_colors,
+    edge_density,
+    estimate_background_color,
+    kmeans_quantization_with_labels,
+    label_regions,
+    laplacian_edges,
+    load_image,
+    median_cut_quantization,
+    posterization,
+    quantization_error,
+    region_metrics,
+    save_color_index_table,
+    save_image_rgb,
+    segment_connected_components,
+    sobel_edges,
+    thin_edges,
+    timed_call,
+    validate_color_count,
+    watershed_segmentation,
+)
+from scripts.batch_difficulty_pipeline import (
+    load_image_preserve_size,
+    render_difficulty,
+    smooth_before_kmeans,
+)
+
+
+DEFAULT_GENERATED_DIR = SERVER_DIR / "generated"
+
+DEFAULT_SETTINGS = {
+    "max_size": 900,
+    "canny_low": 80,
+    "canny_high": 180,
+    "color_edge_delta": 35,
+    "object_min_area": 260,
+    "object_close_kernel": 5,
+    "line_thickness": 1,
+    "edge_compare_thickness": 1,
+    "min_region_area": 160,
+    "simplify_diameter": 9,
+    "simplify_sigma_color": 90,
+    "simplify_sigma_space": 90,
+    "detail_canny_low": 90,
+    "detail_canny_high": 200,
+    "detail_min_area": 3,
+    "detail_max_area": 1200,
+    "dark_detail_threshold": 70,
+    "dark_detail_min_area": 5,
+    "dark_detail_max_area": 900,
+}
+
+
+def object_first_edges(label_map, min_area=260, close_kernel=5, thickness=1):
+    """Create closed coloring-book edges from cleaned color-object contours."""
+    labels = np.asarray(label_map, dtype=np.int32)
+    edge = np.zeros(labels.shape, dtype=np.uint8)
+    kernel = np.ones((close_kernel, close_kernel), np.uint8)
+
+    for label_id in np.unique(labels):
+        mask = (labels == label_id).astype(np.uint8) * 255
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=1)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, np.ones((3, 3), np.uint8), iterations=1)
+        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        for contour in contours:
+            if cv2.contourArea(contour) < min_area:
+                continue
+            cv2.drawContours(edge, [contour], -1, 255, thickness, cv2.LINE_8)
+
+    return edge
+
+
+def detail_expression_edges(
+    image,
+    object_edges,
+    low=100,
+    high=220,
+    min_area=8,
+    max_area=450,
+    dark_threshold=70,
+    dark_min_area=5,
+    dark_max_area=900,
+):
+    """Extract fine expression/detail strokes without affecting segmentation regions."""
+    gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+
+    detail = cv2.Canny(gray, low, high)
+    detail = cv2.bitwise_and(detail, cv2.bitwise_not(object_edges))
+    n_labels, labels, stats, _ = cv2.connectedComponentsWithStats(detail, 8)
+    filtered_edges = np.zeros_like(detail)
+    for i in range(1, n_labels):
+        area = int(stats[i, cv2.CC_STAT_AREA])
+        if min_area <= area <= max_area:
+            filtered_edges[labels == i] = 255
+
+    dark = (gray < dark_threshold).astype(np.uint8) * 255
+    n_labels, labels, stats, _ = cv2.connectedComponentsWithStats(dark, 8)
+    filtered_dark = np.zeros_like(dark)
+    for i in range(1, n_labels):
+        area = int(stats[i, cv2.CC_STAT_AREA])
+        if dark_min_area <= area <= dark_max_area:
+            filtered_dark[labels == i] = 255
+
+    return cv2.bitwise_or(filtered_edges, filtered_dark)
+
+
+def border_connected_region_ids(region_map):
+    """Return connected-component ids touching the image border."""
+    if region_map.size == 0:
+        return set()
+    border_ids = np.concatenate([
+        region_map[0, :],
+        region_map[-1, :],
+        region_map[:, 0],
+        region_map[:, -1],
+    ])
+    return set(int(v) for v in np.unique(border_ids) if int(v) > 0)
+
+
+def best_label_point(region_map, region_id, bbox):
+    x, y, w, h = bbox
+    component = (region_map[y:y + h, x:x + w] == region_id).astype(np.uint8)
+    if component.size == 0 or np.count_nonzero(component) == 0:
+        return x + w / 2, y + h / 2
+    dist = cv2.distanceTransform(component, cv2.DIST_L2, 5)
+    _, _, _, max_loc = cv2.minMaxLoc(dist)
+    return x + max_loc[0], y + max_loc[1]
+
+
+def main_object_mask_from_regions(region_map, regions, background_ids, source_image=None, bridge_iterations=3):
+    """Keep the main subject silhouette so isolated paper/background texture is ignored."""
+    if source_image is not None:
+        border = np.concatenate([
+            source_image[0, :, :],
+            source_image[-1, :, :],
+            source_image[:, 0, :],
+            source_image[:, -1, :],
+        ], axis=0)
+        bg = np.median(border.reshape(-1, 3), axis=0)
+        diff = np.linalg.norm(source_image.astype(np.float32) - bg.astype(np.float32), axis=2)
+        gray_src = cv2.cvtColor(source_image, cv2.COLOR_RGB2GRAY)
+        seed = ((diff > 28) | (gray_src < 120)).astype(np.uint8) * 255
+        seed = cv2.morphologyEx(seed, cv2.MORPH_OPEN, np.ones((3, 3), np.uint8), iterations=1)
+        seed = cv2.morphologyEx(seed, cv2.MORPH_CLOSE, np.ones((17, 17), np.uint8), iterations=2)
+        seed = cv2.dilate(seed, np.ones((5, 5), np.uint8), iterations=2)
+
+        n_labels, labels, stats, _ = cv2.connectedComponentsWithStats(seed, 8)
+        if n_labels > 1:
+            largest = 1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA]))
+            mask = (labels == largest).astype(np.uint8) * 255
+            contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            filled = np.zeros_like(mask)
+            if contours:
+                cv2.drawContours(filled, contours, -1, 255, -1)
+                filled = cv2.morphologyEx(filled, cv2.MORPH_CLOSE, np.ones((21, 21), np.uint8), iterations=1)
+                return filled
+
+    candidate = np.zeros(region_map.shape, dtype=np.uint8)
+    for region in regions:
+        region_id = int(region["id"])
+        if region_id in background_ids:
+            continue
+        candidate[region_map == region_id] = 255
+
+    if np.count_nonzero(candidate) == 0:
+        return candidate
+
+    bridge = cv2.dilate(candidate, np.ones((3, 3), np.uint8), iterations=bridge_iterations)
+    bridge = cv2.morphologyEx(bridge, cv2.MORPH_CLOSE, np.ones((15, 15), np.uint8), iterations=1)
+    n_labels, labels, stats, _ = cv2.connectedComponentsWithStats(bridge, 8)
+    if n_labels <= 1:
+        return bridge
+
+    largest = 1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA]))
+    mask = (labels == largest).astype(np.uint8) * 255
+    mask = cv2.dilate(mask, np.ones((5, 5), np.uint8), iterations=1)
+    return mask
+
+
+def draw_paint_by_number_style(
+    line_image,
+    detail_edges,
+    regions,
+    region_map,
+    background_ids,
+    source_image=None,
+    min_region_area=160,
+    line_gray=185,
+    text_gray=155,
+    font_scale=0.42,
+):
+    """Render a white coloring page with thin gray lines and small gray numbers."""
+    if line_image.ndim == 3:
+        gray = cv2.cvtColor(line_image, cv2.COLOR_RGB2GRAY)
+    else:
+        gray = line_image
+
+    object_mask = main_object_mask_from_regions(region_map, regions, background_ids, source_image=source_image)
+    keep_near_object = object_mask > 0
+    edge_mask = ((gray < 128) | (detail_edges > 0)) & keep_near_object
+
+    canvas = np.full((gray.shape[0], gray.shape[1], 3), 255, dtype=np.uint8)
+    canvas[edge_mask] = line_gray
+
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    for region in sorted(regions, key=lambda r: r["area"], reverse=True):
+        region_id = int(region["id"])
+        if region_id in background_ids or region["area"] < min_region_area:
+            continue
+        region_pixels = region_map == region_id
+        object_overlap = np.count_nonzero(region_pixels & keep_near_object)
+        if object_overlap == 0:
+            continue
+        if object_overlap / max(1, int(region["area"])) < 0.45:
+            continue
+
+        text = str(region.get("color_id", region_id))
+        cx, cy = best_label_point(region_map, region_id, region["bbox"])
+        thickness = 1
+        (tw, th), base = cv2.getTextSize(text, font, font_scale, thickness)
+        x0, y0, w, h = region["bbox"]
+        x = int(np.clip(cx - tw / 2, x0 + 1, max(x0 + 1, x0 + w - tw - 1)))
+        y = int(np.clip(cy + th / 2, y0 + th + 1, max(y0 + th + 1, y0 + h - 1)))
+        cv2.putText(canvas, text, (x, y), font, font_scale, (text_gray, text_gray, text_gray), thickness, cv2.LINE_AA)
+    return canvas
+
+
+def palette_to_json(palette):
+    result = []
+    for index, color in enumerate(np.asarray(palette, dtype=np.uint8), start=1):
+        rgb = [int(v) for v in color]
+        result.append({
+            "id": index,
+            "rgb": rgb,
+            "hex": "#{:02X}{:02X}{:02X}".format(*rgb),
+        })
+    return result
+
+
+def generate_coloring_book(image_path, k, output_root=DEFAULT_GENERATED_DIR, result_id=None, settings=None):
+    """Generate paint-by-number coloring-book assets from an image file."""
+    start = time.perf_counter()
+    k = validate_color_count(k)
+    config = {**DEFAULT_SETTINGS, **(settings or {})}
+    result_id = result_id or uuid4().hex
+    output_dir = Path(output_root) / result_id
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    logger.info("Starting pipeline result_id=%s k=%d", result_id, k)
+
+    # --- Stage 1: Load & profile ---
+    load_start = time.perf_counter()
+    image, profile, policy = load_image_preserve_size(
+        image_path,
+        max_size=config.get("max_size"),
+        auto_policy=True,
+    )
+    load_time = time.perf_counter() - load_start
+    logger.info(
+        "Loaded result_id=%s size=%dx%d -> %dx%d policy=%s load=%.2fs",
+        result_id,
+        profile.get("original_width"), profile.get("original_height"),
+        profile.get("working_width"), profile.get("working_height"),
+        policy.get("detail_boost"),
+        load_time,
+    )
+
+    # --- Stage 2: Smooth ---
+    simplified_start = time.perf_counter()
+    simplified_image = smooth_before_kmeans(image)
+    simplify_time = time.perf_counter() - simplified_start
+    logger.info("Smoothed result_id=%s simplify=%.2fs", result_id, simplify_time)
+
+    # --- Stage 3: Render ---
+    render_start = time.perf_counter()
+    numbered_coloringbook, filled_preview, metrics, details = render_difficulty(
+        image,
+        simplified_image,
+        k,
+        policy=policy,
+        return_details=True,
+    )
+    render_time = time.perf_counter() - render_start
+    logger.info("Rendered result_id=%s regions=%d render=%.2fs", result_id, metrics.get("regions", 0), render_time)
+
+    kmeans_palette = details["palette"]
+    kmeans_img = details["kmeans"]
+    regions = details["regions"]
+    region_map = details["region_map"]
+    final_line_image = details["line_image"]
+    segmentation_line_image = details["segmentation_line_image"]
+    detail_edges = details["detail_edges"]
+
+    # --- Stage 4: Build secondary outputs ---
+    region_preview = color_region_preview(region_map)
+    color_edge_preview = color_region_edge_preview(
+        final_line_image,
+        region_map,
+        regions,
+        kmeans_palette,
+        thickness=3,
+    )
+    colored_by_labels_numbered = label_regions(
+        filled_preview,
+        regions,
+        font_scale=0.65,
+        region_map=region_map,
+        skip_background=True,
+    )
+    color_index = save_color_index_table(
+        kmeans_palette,
+        str(output_dir / "palette.png"),
+        regions,
+        "Color Index",
+    )
+    numbered_with_index = combine_with_color_index(
+        numbered_coloringbook,
+        kmeans_palette,
+        regions,
+        str(output_dir / "numbered_with_color_index.png"),
+        "Color Index",
+    )
+
+    contour_preview, _ = contour_regions(segmentation_line_image, config["min_region_area"])
+    watershed_preview, _ = watershed_segmentation(kmeans_img)
+    poster_img, _ = posterization(simplified_image, k)
+    median_img, _ = median_cut_quantization(simplified_image, k)
+
+    # --- Stage 5: Save images ---
+    # Each logical path maps to exactly one distinct image; aliases are removed.
+    save_tasks = [
+        ("original.png",                    image),
+        ("simplified_input.png",            simplified_image),
+        ("kmeans.png",                      kmeans_img),
+        ("posterization.png",               poster_img),
+        ("median_cut.png",                  median_img),
+        ("segmentation_line.png",           segmentation_line_image),
+        ("detail_edges.png",                coloring_line_image(detail_edges)),
+        ("line_image.png",                  final_line_image),
+        ("region_preview.png",              region_preview),
+        ("color_edge_preview.png",          color_edge_preview),
+        ("contour_preview.png",             contour_preview),
+        ("watershed_preview.png",           watershed_preview),
+        ("colored_by_labels.png",           filled_preview),
+        ("colored_by_labels_numbered.png",  colored_by_labels_numbered),
+        ("final_numbered_coloringbook.png", numbered_coloringbook),
+    ]
+
+    save_start = time.perf_counter()
+    paths = {}
+    for filename, img_data in save_tasks:
+        dest = output_dir / filename
+        save_image_rgb(str(dest), img_data)
+        # Derive logical key from filename stem (first segment before underscore for simple names)
+        key = filename.replace(".png", "")
+        paths[key] = dest
+
+    # palette.png and numbered_with_color_index.png are already written by
+    # save_color_index_table / combine_with_color_index above; register them.
+    paths["palette"] = output_dir / "palette.png"
+    paths["combined"] = output_dir / "numbered_with_color_index.png"
+
+    # Free large intermediate arrays that are no longer needed
+    del poster_img, median_img, region_preview, color_edge_preview
+    del contour_preview, watershed_preview, colored_by_labels_numbered
+    del details
+
+    save_time = time.perf_counter() - save_start
+
+    # --- Stage 6: Compute final metrics ---
+    total_time = time.perf_counter() - start
+    metric_source_image = simplified_image
+    if simplified_image.shape[:2] != kmeans_img.shape[:2]:
+        metric_source_image = cv2.resize(
+            simplified_image,
+            (kmeans_img.shape[1], kmeans_img.shape[0]),
+            interpolation=cv2.INTER_CUBIC,
+        )
+    metrics.update({
+        "k": k,
+        "runtime_sec": round(total_time, 3),
+        "load_time_sec": round(load_time, 3),
+        "simplify_time_sec": round(simplify_time, 3),
+        "render_time_sec": round(render_time, 3),
+        "save_time_sec": round(save_time, 3),
+        "color_error": quantization_error(metric_source_image, kmeans_img),
+        "unique_colors": count_unique_colors(kmeans_img),
+        "policy": policy.get("detail_boost"),
+        "original_width": profile.get("original_width"),
+        "original_height": profile.get("original_height"),
+        "working_width": profile.get("working_width"),
+        "working_height": profile.get("working_height"),
+    })
+
+    logger.info(
+        "Pipeline complete result_id=%s total=%.2fs (load=%.2f simplify=%.2f render=%.2f save=%.2f)",
+        result_id, total_time, load_time, simplify_time, render_time, save_time,
+    )
+
+    return {
+        "result_id": result_id,
+        "output_dir": str(output_dir),
+        "paths": {key: str(value) for key, value in paths.items()},
+        "palette": palette_to_json(kmeans_palette),
+        "metrics": metrics,
+        "image_size": {
+            "width": int(numbered_coloringbook.shape[1]),
+            "height": int(numbered_coloringbook.shape[0]),
+        },
+        "assets": {
+            "color_index": color_index,
+            "numbered_with_index": numbered_with_index,
+        },
+    }

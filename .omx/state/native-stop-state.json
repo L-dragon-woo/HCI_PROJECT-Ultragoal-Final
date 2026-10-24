@@ -1,0 +1,124 @@
+{
+  "sessions": {
+    "019e5f33-c659-7f02-9888-eeec97a0d4a0": {
+      "ordinary_no_progress_guard": {
+        "fingerprint": "ordinary|{\"title\":\"변�??�용 ?�인\"}",
+        "first_seen_at": "2026-05-25T12:54:56.351Z",
+        "last_seen_at": "2026-05-25T12:54:56.351Z",
+        "repeat_count": 1,
+        "last_turn_id": "019e5f33-c685-7ef2-8f3f-d5164dce8a22",
+        "last_thread_id": null
+      }
+    },
+    "019e5f33-1de4-7581-94ac-933be3050e31": {
+      "ordinary_no_progress_guard": {
+        "fingerprint": "ordinary|?�상 ?�시 바꿨?�니?? ?�재 ?�정?� ?�렇�??�습?�다. ```python segmentation_line_color = (205, 205, 205) # ?�한 ?�색 detail_line_gray = 0 # 진한 검??n``` 반영 ?�일: - [04_final_pipeline.ipynb](</c:/users/qhtm0/desktop/project/hci_project/server/04_final_pipeline.ipynb>) - [batch_difficulty_pipeline.py](</c:/users/qhtm0/desktop/project/hci_project/server/scripts/batch_difficulty_pipeline.py>) 검증도 ?�습?�다. `doraemong.jpeg` ?�플�???�??�려?? ```text detail dark pixels: 15631 segmentation light pixels: 18769 ``` 처럼 검??detail�??�한 segmentation line???�제 출력???�어가??�??�인?�습?�다. 중단??배치 ?�로?�스??종료?��??�니??",
+        "first_seen_at": "2026-05-26T04:48:24.016Z",
+        "last_seen_at": "2026-05-26T04:48:24.016Z",
+        "repeat_count": 1,
+        "last_turn_id": "019e629b-0370-7d93-bad4-ee7745a8a8d3",
+        "last_thread_id": null
+      }
+    },
+    "019e62b5-7fa1-7290-a5e1-739f86b490a1": {
+      "ordinary_no_progress_guard": {
+        "fingerprint": "ordinary|{\"title\":\"?�른�??�래 ??분할 ?�류 ?�인\"}",
+        "first_seen_at": "2026-05-26T05:15:32.122Z",
+        "last_seen_at": "2026-05-26T05:15:32.122Z",
+        "repeat_count": 1,
+        "last_turn_id": "019e62b5-7fe1-75d2-9024-5fc6b3f2e8a1",
+        "last_thread_id": null
+      }
+    },
+    "019e62b4-e0dd-72e0-b6c2-da29a3e4b1ca": {
+      "ordinary_no_progress_guard": {
+        "fingerprint": "ordinary|?�렸?�니?? 출력 ?�더???�기?�요: [server/outputs/doraemong_pipeline](c:/users/qhtm0/desktop/project/hci_project/server/outputs/doraemong_pipeline) ?�동 추천 k가 `10`?�로 ?��????�이?�별 결과???�음 ?�일명으�??�성?�습?�다. - [easy k=10](c:/users/qhtm0/desktop/project/hci_project/server/outputs/doraemong_pipeline/04_difficulty_easy_k10.png) - [normal k=20](c:/users/qhtm0/desktop/project/hci_project/server/outputs/doraemong_pipeline/04_difficulty_normal_k20.png) - [hard k=30](c:/users/qhtm0/desktop/project/hci_project/server/outputs/doraemong_pipeline/04_difficulty_hard_k30.png) - [비교 ?��?지](c:/users/qhtm0/desktop/project/hci_project/server/outputs/doraemong_pipeline/04_difficulty_comparison.png) 참고�?기존 `server/ychoutput`?� ??? ?�고 별도 ?�더???�성?�습?�다.",
+        "first_seen_at": "2026-05-26T06:09:08.714Z",
+        "last_seen_at": "2026-05-26T06:09:08.714Z",
+        "repeat_count": 1,
+        "last_turn_id": "019e62e1-99c4-7062-b0b6-837ce4a90b41",
+        "last_thread_id": null
+      }
+    },
+    "019e67df-90d6-7e31-b963-e34a1638893b": {
+      "ordinary_no_progress_guard": {
+        "fingerprint": "ordinary|{\"title\":\"?�트�?비교?????��? �?찾기\"}",
+        "first_seen_at": "2026-05-27T05:19:31.288Z",
+        "last_seen_at": "2026-05-27T05:19:31.288Z",
+        "repeat_count": 1,
+        "last_turn_id": "019e67df-910e-72f3-bf5e-323c250a2928",
+        "last_thread_id": null
+      }
+    },
+    "019e67df-089b-7393-99de-bb731911ff4f": {
+      "ordinary_no_progress_guard": {
+        "fingerprint": "ordinary|`git reset --hard 15231c6` ?�료?�습?�다. ?�재 head??`15231c6 feat: images`?�니?? 참고�??�용?��? 준 ?�체 ?�시 `15231c611b63ff8f230b21a0be87144525502f82`??로컬?�서 ?�확??검증되지 ?�았�? 같�? prefix???�제 커밋 `15231c6`�?reset?�습?�다. ?�아 ?�는 ??��?��? `reset --hard`�?지?��?지 ?�는 untracked ?�일/?�더?�니?? ```text server/04-1.final_pipeline1.final_pipeline.ipynb server/05_final_hybrid_pipeline.ipynb server/_analysis_exports/ server/outputs/02_all_data_results/ server/outputs/04_1_final_pipeline_02_edge/ server/outputs/05_final_hybrid_pipeline/ ```",
+        "first_seen_at": "2026-05-27T06:15:41.407Z",
+        "last_seen_at": "2026-05-27T06:15:41.407Z",
+        "repeat_count": 1,
+        "last_turn_id": "019e6811-109e-7b22-b69a-d169d0749a3d",
+        "last_thread_id": null
+      }
+    },
+    "019e69d9-0d08-77f3-9472-a29ff24a82fa": {
+      "ordinary_no_progress_guard": {
+        "fingerprint": "ordinary|{\"title\":\"?�라?�몽 ?�동??보이�??�정\"}",
+        "first_seen_at": "2026-05-27T14:31:39.500Z",
+        "last_seen_at": "2026-05-27T14:31:39.500Z",
+        "repeat_count": 1,
+        "last_turn_id": "019e69d9-0d45-7bb1-b7c2-ddffce951e3a",
+        "last_thread_id": null
+      }
+    },
+    "019e69d8-a52e-7b90-9b19-9e64b785b172": {
+      "ordinary_no_progress_guard": {
+        "fingerprint": "ordinary|밸로그용 markdown 문서 ?�성?�어. ?�일 ?�치: [docs/final_pipeline_blog.md](/c:/users/qhtm0/desktop/project/hci_project/docs/final_pipeline_blog.md) 구성?� ?�렇�??�았?? - ?�체 ?�이?�라??발전 ?�름 - 고정 k 문제?� ?�동 k 추천 - ?�이?�별 k ?�책 - ?�비?�용 ?��?지 ?�동 ?�책 - 출력 ?�상???�책 - segmentation/detail line 분리 - ?�락 edge, ?�긴 ?? 질감 과분???�러블슈??n- filled preview�????�유 - ?�재 batch pipeline 구조 - ???�견�?결론 �?`536`�??�도�? utf-8�??�상 ?�?�돼 ?�어. powershell `get-content`?�서???��???깨져 보일 ???�는?? python?�로 utf-8 ?�기 ?�인?�을 ?�는 ?�상 출력?�어.",
+        "first_seen_at": "2026-05-27T18:59:54.662Z",
+        "last_seen_at": "2026-05-27T18:59:54.662Z",
+        "repeat_count": 1,
+        "last_turn_id": "019e6acb-5b3d-7611-ada0-61b718387cd2",
+        "last_thread_id": null
+      }
+    },
+    "019e6cce-6228-7c82-b25f-0bd3bbc1683d": {
+      "ordinary_no_progress_guard": {
+        "fingerprint": "ordinary|{\"title\":\"?��? ?�역 번호 ?�인\"}",
+        "first_seen_at": "2026-05-28T04:18:52.892Z",
+        "last_seen_at": "2026-05-28T04:18:52.892Z",
+        "repeat_count": 1,
+        "last_turn_id": "019e6cce-6b54-7293-b64e-b990234f4257",
+        "last_thread_id": null
+      }
+    },
+    "019e6ccb-473e-7750-9cf0-33244b3177e5": {
+      "ordinary_no_progress_guard": {
+        "fingerprint": "ordinary|박보검 ?��?지 결과 ?�성?�습?�다. ?��? ?�일명�? opencv가 경로�?깨서 ?�어?? 처리???�만 `bogum.jpeg`�?복사???�행?�습?�다. 출력 ?�더: [server/outputs_scale3_label_islands_bogum](c:/users/qhtm0/desktop/project/hci_project/server/outputs_scale3_label_islands_bogum) 미리보기 그리?? [preview_grid_numbered.png](c:/users/qhtm0/desktop/project/hci_project/server/outputs_scale3_label_islands_bogum/preview_grid_numbered.png) 결과 ?�일: - [bogum_easy_k12.png](c:/users/qhtm0/desktop/project/hci_project/server/outputs_scale3_label_islands_bogum/bogum_easy_k12.png) - [bogum_normal_k22.png](c:/users/qhtm0/desktop/project/hci_project/server/outputs_scale3_label_islands_bogum/bogum_normal_k22.png) - [bogum_hard_k32.png](c:/users/qhtm0/desktop/project/hci_project/server/outputs_scale3_label_islands_bogum/bogum_hard_k32.png) filled preview??같�? ?�더??같이 ?�습?�다. ?�성 지?�는 easy 340 regions, normal 481 regions, hard 553 regions?�니??",
+        "first_seen_at": "2026-05-28T05:25:27.868Z",
+        "last_seen_at": "2026-05-28T05:25:27.868Z",
+        "repeat_count": 1,
+        "last_turn_id": "019e6d09-10a8-78d0-9cc8-dc412940f38c",
+        "last_thread_id": null
+      }
+    },
+    "019e6d9b-6fe8-7ef2-8a49-b40e7ae84e40": {
+      "ordinary_no_progress_guard": {
+        "fingerprint": "ordinary|{\"title\":\"fix batch policy keys\"}",
+        "first_seen_at": "2026-05-28T08:02:52.462Z",
+        "last_seen_at": "2026-05-28T08:02:52.462Z",
+        "repeat_count": 1,
+        "last_turn_id": "019e6d9b-7025-7993-abae-4071ff54fd4e",
+        "last_thread_id": null
+      }
+    },
+    "019e6d9b-5a48-7472-80b4-eff2a453be06": {
+      "ordinary_no_progress_guard": {
+        "fingerprint": "ordinary|?�번 변경으�?**?�동 ?�책(auto_policy=true)** 쪽과 **고정 ?�책(auto_policy=false)** 쪽의 `policy` ?�셔?�리 구조가 같아졌습?�다. 기존?�는 `auto_policy=false`????만들?��???`policy`??`k_upper_bound`가 ?�었?�니?? 그런??`run_batch()`???�중??무조�?`policy[\"k_upper_bound\"]`�??�어??csv ?�약???�고 ?�어?? 고정 ?�책?�로 ?�행?�면 `keyerror`가 ?????�었?�니?? ?�번??추�???값들?� 고정 ?�책??기본값입?�다: ```python \"simple_color_art\": false, \"k_upper_bound\": k_upper_bound, \"difficulty_margins\": difficulty_margins, ``` �? ?�작 변?�는 ?�렇�?보면 ?�니?? - 고정 ?�책 ?�행 ?????�상 `policy[\"k_upper_bound\"]`?�서 ?��?지 ?�습?�다. - `k_upper_bound`??기존 ?�반 기본값인 `k_upper_bound`, ?�재 코드??`60`, ???�용?�니?? - `difficulty_margins`???�반 ?�이??간격 기본값을 ?�용?�니?? - `simple_color_art`??고정 ?�책?�서???�동 ?�별???��? ?�으므�?`false`�??�니?? 중요???��?, ?��?지 처리 ?�고리즘 ?�체�??�로 바꾼 �??�닙?�다. 기존 고정 ?�책???�도�??��??�면?? `run_batch()`가 기�??�는 ?�책 ?�드?�을 채워??배치 ?�행???�전?�게 ?�나?�록 맞춘 ?�정?�니??",
+        "first_seen_at": "2026-05-28T08:04:35.800Z",
+        "last_seen_at": "2026-05-28T08:04:35.800Z",
+        "repeat_count": 1,
+        "last_turn_id": "019e6d9c-fd25-7812-b807-83d1a56a571e",
+        "last_thread_id": null
+      }
+    }
+  }
+}
